@@ -8,6 +8,8 @@ By default, Elasticbeanstalk creates a security group for every environment that
 
 ## Quickstart
 
+The following example show cases how this resource can be used. The full example can be found in `examples/main.tf`.
+
 ```terraform
 terraform {
   required_providers {
