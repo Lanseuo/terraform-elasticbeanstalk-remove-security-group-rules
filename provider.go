@@ -125,8 +125,8 @@ func resourceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) 
 
 	diags = append(diags, diag.Diagnostic{
 		Severity: diag.Warning,
-		Summary:  "It is impossible to delete this ressource.",
-		Detail:   "TODO",
+		Summary:  "Deleting this resource on its own has no immediate effect.",
+		Detail:   "This resource does not represent a real-world entity in AWS, therefore changing or deleting this resource on its own has no immediate effect.",
 	})
 
 	d.SetId("")
