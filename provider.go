@@ -17,6 +17,10 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"elasticbeanstalk-remove-security-group-rules_action": resource(),
@@ -29,10 +33,29 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	region := d.Get("region").(string)
+	profile := d.Get("profile").(string)
 
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region)},
 	)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
+	if profile != "" {
+		sess, err = session.NewSessionWithOptions(session.Options{
+			Config: aws.Config{
+				Region: aws.String(region),
+			},
+			SharedConfigState: session.SharedConfigEnable,
+			Profile:           profile,
+		})
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+	}
+
+	_, err = sess.Config.Credentials.Get()
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
