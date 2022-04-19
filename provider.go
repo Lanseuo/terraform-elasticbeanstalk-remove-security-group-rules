@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -121,18 +122,22 @@ func resourceRead(ctx context.Context, d *schema.ResourceData, m interface{}) di
 		return diag.FromErr(err)
 	}
 
-	if len(securityGroups) == 0 {
-		return diag.Errorf("Unable to find security group that is attached to Elasticbeanstalk environment %s", elasticbeanstalkEnvironmentID)
-	}
-	if len(securityGroups) > 1 {
+	if len(securityGroups) == 1 {
+		securityGroup := securityGroups[0]
+		hasIngressRules := len(securityGroup.IpPermissions) > 0
+		if !hasIngressRules {
+			d.SetId(elasticbeanstalkEnvironmentID)
+		} else {
+			d.SetId("")
+		}
+	} else if len(securityGroups) > 1 {
 		return diag.Errorf("Found several security groups that are attached to Elasticbeanstalk environment %s", elasticbeanstalkEnvironmentID)
-	}
-
-	securityGroup := securityGroups[0]
-	hasIngressRules := len(securityGroup.IpPermissions) > 0
-	if !hasIngressRules {
-		d.SetId(elasticbeanstalkEnvironmentID)
 	} else {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Unable to find security group that is attached to Elasticbeanstalk environment %s", elasticbeanstalkEnvironmentID),
+			Detail:   "This usually indicates that the Elasticbeanstalk environment has been deleted or that the security group has been manually deleted.",
+		})
 		d.SetId("")
 	}
 
